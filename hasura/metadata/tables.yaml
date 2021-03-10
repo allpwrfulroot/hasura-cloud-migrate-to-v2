@@ -1,0 +1,146 @@
+- table:
+    schema: public
+    name: attendance
+  object_relationships:
+  - name: event
+    using:
+      foreign_key_constraint_on: event_id
+  - name: guest
+    using:
+      foreign_key_constraint_on: guest_id
+  - name: inviteStatusByInviteStatus
+    using:
+      foreign_key_constraint_on: invite_status
+- table:
+    schema: public
+    name: events
+  array_relationships:
+  - name: attendances
+    using:
+      foreign_key_constraint_on:
+        column: event_id
+        table:
+          schema: public
+          name: attendance
+- table:
+    schema: public
+    name: guests
+  object_relationships:
+  - name: host
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: users
+        column_mapping:
+          host_id: id
+  array_relationships:
+  - name: attendances
+    using:
+      foreign_key_constraint_on:
+        column: guest_id
+        table:
+          schema: public
+          name: attendance
+  insert_permissions:
+  - role: EVP
+    permission:
+      check:
+        host_id:
+          _in: X-Hasura-Allowed-Ids
+      columns:
+      - name
+      - host_id
+      - id
+      backend_only: false
+  select_permissions:
+  - role: EVP
+    permission:
+      columns:
+      - id
+      - name
+      - host_id
+      filter: {}
+      allow_aggregations: true
+  - role: user
+    permission:
+      columns:
+      - host_id
+      - id
+      - name
+      filter:
+        _or:
+        - host_id:
+            _eq: X-Hasura-User-Id
+        - host:
+            managers:
+              _has_key: X-Hasura-User-Id
+  update_permissions:
+  - role: EVP
+    permission:
+      columns:
+      - name
+      - host_id
+      - id
+      filter: {}
+      check: {}
+- table:
+    schema: public
+    name: invite_status
+  array_relationships:
+  - name: attendances
+    using:
+      foreign_key_constraint_on:
+        column: invite_status
+        table:
+          schema: public
+          name: attendance
+- table:
+    schema: public
+    name: temp_user
+  object_relationships:
+  - name: reports_to
+    using:
+      foreign_key_constraint_on: manager_id
+  array_relationships:
+  - name: manages
+    using:
+      manual_configuration:
+        remote_table:
+          schema: public
+          name: temp_user
+        column_mapping:
+          id: manager_id
+- table:
+    schema: public
+    name: users
+  object_relationships:
+  - name: user
+    using:
+      foreign_key_constraint_on: manager_id
+  array_relationships:
+  - name: users
+    using:
+      foreign_key_constraint_on:
+        column: manager_id
+        table:
+          schema: public
+          name: users
+  select_permissions:
+  - role: EVP
+    permission:
+      columns:
+      - id
+      - name
+      - title
+      - manager_id
+      - managers
+      filter: {}
+  - role: user
+    permission:
+      columns:
+      - id
+      - manager_id
+      - name
+      - title
+      filter: {}

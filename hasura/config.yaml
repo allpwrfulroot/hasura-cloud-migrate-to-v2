@@ -1,0 +1,7 @@
+version: 2
+endpoint: https://vocal-donkey-43.hasura.app
+metadata_directory: metadata
+migrations_directory: migrations
+actions:
+  kind: synchronous
+  handler_webhook_baseurl: http://localhost:3000
